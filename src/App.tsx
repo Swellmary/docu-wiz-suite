@@ -3,8 +3,22 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import Layout from "./components/Layout";
+import Index from "./pages/Index";
+import MergePdf from "./pages/MergePdf";
+import SplitPdf from "./pages/SplitPdf";
+import CompressPdf from "./pages/CompressPdf";
+import RotatePdf from "./pages/RotatePdf";
+import WatermarkPdf from "./pages/WatermarkPdf";
+import ProtectPdf from "./pages/ProtectPdf";
+import JpgToPdf from "./pages/JpgToPdf";
+import PageNumbersPdf from "./pages/PageNumbersPdf";
+import MetadataPdf from "./pages/MetadataPdf";
+import ExtractPages from "./pages/ExtractPages";
+import RemovePages from "./pages/RemovePages";
+import About from "./pages/About";
+import GenericToolPage from "./pages/GenericToolPage";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -14,11 +28,27 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/merge" element={<MergePdf />} />
+            <Route path="/split" element={<SplitPdf />} />
+            <Route path="/compress" element={<CompressPdf />} />
+            <Route path="/rotate" element={<RotatePdf />} />
+            <Route path="/watermark" element={<WatermarkPdf />} />
+            <Route path="/protect" element={<ProtectPdf />} />
+            <Route path="/jpg-to-pdf" element={<JpgToPdf />} />
+            <Route path="/page-numbers" element={<PageNumbersPdf />} />
+            <Route path="/metadata" element={<MetadataPdf />} />
+            <Route path="/extract-pages" element={<ExtractPages />} />
+            <Route path="/remove-pages" element={<RemovePages />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/privacy" element={<About />} />
+            <Route path="/terms" element={<About />} />
+            <Route path="/:toolId" element={<GenericToolPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Layout>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
