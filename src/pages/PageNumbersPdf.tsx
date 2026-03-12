@@ -38,13 +38,7 @@ const PageNumbersPdf = () => {
       });
 
       const pdfBytes = await doc.save();
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `numbered_${files[0].name}`;
-      a.click();
-      URL.revokeObjectURL(url);
+      downloadPdf(pdfBytes, `numbered_${files[0].name}`);
       toast.success("Page numbers added!");
     } catch {
       toast.error("Failed to add page numbers.");

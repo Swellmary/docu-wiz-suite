@@ -29,13 +29,7 @@ const JpgToPdf = () => {
         page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
       }
       const pdfBytes = await doc.save();
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "images.pdf";
-      a.click();
-      URL.revokeObjectURL(url);
+      downloadPdf(pdfBytes, "images.pdf");
       toast.success("Images converted to PDF!");
     } catch {
       toast.error("Failed to convert images. Make sure files are valid JPG or PNG.");

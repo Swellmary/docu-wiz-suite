@@ -29,13 +29,7 @@ const MergePdf = () => {
         pages.forEach((p) => merged.addPage(p));
       }
       const pdfBytes = await merged.save();
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "merged.pdf";
-      a.click();
-      URL.revokeObjectURL(url);
+      downloadPdf(pdfBytes, "merged.pdf");
       toast.success("PDFs merged successfully!");
     } catch {
       toast.error("Failed to merge PDFs. Make sure all files are valid.");

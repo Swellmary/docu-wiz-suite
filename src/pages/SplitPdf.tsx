@@ -27,13 +27,7 @@ const SplitPdf = () => {
         const [page] = await newDoc.copyPages(doc, [i]);
         newDoc.addPage(page);
         const pdfBytes = await newDoc.save();
-        const blob = new Blob([pdfBytes], { type: "application/pdf" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `page_${i + 1}.pdf`;
-        a.click();
-        URL.revokeObjectURL(url);
+        downloadPdf(pdfBytes, `page_${i + 1}.pdf`);
       }
       toast.success(`Split into ${total} pages!`);
     } catch {

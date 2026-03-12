@@ -25,13 +25,7 @@ const RotatePdf = () => {
         page.setRotation(degrees(page.getRotation().angle + rotation));
       });
       const pdfBytes = await doc.save();
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `rotated_${files[0].name}`;
-      a.click();
-      URL.revokeObjectURL(url);
+      downloadPdf(pdfBytes, `rotated_${files[0].name}`);
       toast.success("PDF rotated successfully!");
     } catch {
       toast.error("Failed to rotate PDF.");

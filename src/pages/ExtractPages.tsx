@@ -35,13 +35,7 @@ const ExtractPages = () => {
       const copied = await newDoc.copyPages(doc, indices);
       copied.forEach(p => newDoc.addPage(p));
       const pdfBytes = await newDoc.save();
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `extracted_${files[0].name}`;
-      a.click();
-      URL.revokeObjectURL(url);
+      downloadPdf(pdfBytes, `extracted_${files[0].name}`);
       toast.success(`Extracted ${indices.length} pages!`);
     } catch {
       toast.error("Failed to extract pages.");

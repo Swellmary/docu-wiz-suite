@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import { toast } from "sonner";
 import { Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import ToolPageLayout from "@/components/ToolPageLayout";
 import FileUpload from "@/components/FileUpload";
 import { tools } from "@/lib/tools";
+import { downloadPdf } from "@/lib/pdf-utils";
 
 const tool = tools.find((t) => t.id === "watermark")!;
 
@@ -34,18 +35,12 @@ const WatermarkPdf = () => {
           font,
           color: rgb(0.7, 0.7, 0.7),
           opacity: 0.3,
-          rotate: { type: "degrees" as const, angle: -45 },
+          rotate: degrees(-45),
         });
       });
 
       const pdfBytes = await doc.save();
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `watermarked_${files[0].name}`;
-      a.click();
-      URL.revokeObjectURL(url);
+      downloadPdf(pdfBytes, `watermarked_${files[0].name}`);
       toast.success("Watermark added!");
     } catch {
       toast.error("Failed to add watermark.");

@@ -26,13 +26,7 @@ const CompressPdf = () => {
       const newSize = pdfBytes.length;
       const reduction = Math.round((1 - newSize / originalSize) * 100);
 
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `compressed_${files[0].name}`;
-      a.click();
-      URL.revokeObjectURL(url);
+      downloadPdf(pdfBytes, `compressed_${files[0].name}`);
       toast.success(`Compressed! ${reduction > 0 ? `Reduced by ${reduction}%` : "File was already optimized"}`);
     } catch {
       toast.error("Failed to compress PDF.");

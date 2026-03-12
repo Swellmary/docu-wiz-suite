@@ -36,13 +36,7 @@ const RemovePages = () => {
       const copied = await newDoc.copyPages(doc, keepIndices);
       copied.forEach(p => newDoc.addPage(p));
       const pdfBytes = await newDoc.save();
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `trimmed_${files[0].name}`;
-      a.click();
-      URL.revokeObjectURL(url);
+      downloadPdf(pdfBytes, `trimmed_${files[0].name}`);
       toast.success(`Removed ${toRemove.size} pages!`);
     } catch {
       toast.error("Failed to remove pages.");
