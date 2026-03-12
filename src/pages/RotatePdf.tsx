@@ -2,6 +2,7 @@ import { useState } from "react";
 import { PDFDocument, degrees } from "pdf-lib";
 import { toast } from "sonner";
 import { Download, Loader2, RotateCw } from "lucide-react";
+import { downloadPdf } from "@/lib/pdf-utils";
 import { Button } from "@/components/ui/button";
 import ToolPageLayout from "@/components/ToolPageLayout";
 import FileUpload from "@/components/FileUpload";
