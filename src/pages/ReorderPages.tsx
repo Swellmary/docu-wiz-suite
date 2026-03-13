@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { PDFDocument } from "pdf-lib";
 import { toast } from "sonner";
-import { Download } from "lucide-react";
+import { Download, GripVertical } from "lucide-react";
 import { downloadPdf } from "@/lib/pdf-utils";
 import { renderPdfThumbnails, PageThumbnail } from "@/lib/pdf-preview";
 import { Button } from "@/components/ui/button";
@@ -11,12 +11,11 @@ import PdfPageGrid from "@/components/PdfPageGrid";
 import ProcessingProgress from "@/components/ProcessingProgress";
 import { tools } from "@/lib/tools";
 
-const tool = tools.find((t) => t.id === "extract-pages")!;
+const tool = tools.find((t) => t.id === "organize")!;
 
-const ExtractPages = () => {
+const ReorderPages = () => {
   const [files, setFiles] = useState<File[]>([]);
-  const [thumbnails, setThumbnails] = useState<PageThumbnail[]>([]);
-  const [selectedPages, setSelectedPages] = useState<Set<number>>(new Set());
+  const [pages, setPages] = useState<PageThumbnail[]>([]);
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -25,31 +24,25 @@ const ExtractPages = () => {
     setFiles([file]);
     try {
       const thumbs = await renderPdfThumbnails(file, 0.3);
-      setThumbnails(thumbs);
-      setSelectedPages(new Set());
+      setPages(thumbs);
     } catch {
       toast.error("Could not preview PDF");
     }
   }, []);
 
-  const togglePage = useCallback((pageNum: number) => {
-    setSelectedPages((prev) => {
-      const next = new Set(prev);
-      next.has(pageNum) ? next.delete(pageNum) : next.add(pageNum);
-      return next;
-    });
+  const handleReorder = useCallback((reordered: PageThumbnail[]) => {
+    setPages(reordered);
   }, []);
 
-  const handleExtract = async () => {
-    if (!files.length || selectedPages.size === 0) return;
+  const handleSave = async () => {
+    if (!files.length || !pages.length) return;
     setProcessing(true);
     setProgress(0);
     try {
       const bytes = await files[0].arrayBuffer();
       const doc = await PDFDocument.load(bytes);
-      const indices = Array.from(selectedPages).sort((a, b) => a - b).map((p) => p - 1);
-
       const newDoc = await PDFDocument.create();
+      const indices = pages.map((p) => p.pageNumber - 1);
       const copied = await newDoc.copyPages(doc, indices);
       copied.forEach((p, i) => {
         newDoc.addPage(p);
@@ -57,12 +50,12 @@ const ExtractPages = () => {
       });
       const pdfBytes = await newDoc.save();
       setProgress(100);
-      downloadPdf(pdfBytes, `extracted_${files[0].name}`);
-      toast.success(`Extracted ${indices.length} pages!`);
+      downloadPdf(pdfBytes, `reordered_${files[0].name}`);
+      toast.success("Pages reordered successfully!");
       setFiles([]);
-      setThumbnails([]);
+      setPages([]);
     } catch {
-      toast.error("Failed to extract pages.");
+      toast.error("Failed to reorder pages.");
     } finally {
       setProcessing(false);
     }
@@ -74,35 +67,30 @@ const ExtractPages = () => {
         accept=".pdf"
         files={files}
         onFilesSelected={handleFilesSelected}
-        onRemoveFile={() => { setFiles([]); setThumbnails([]); }}
+        onRemoveFile={() => { setFiles([]); setPages([]); }}
       />
 
-      {thumbnails.length > 0 && !processing && (
+      {pages.length > 0 && !processing && (
         <div className="mt-6 space-y-3">
-          <p className="text-center text-sm text-muted-foreground">
-            Click pages to select them for extraction ({selectedPages.size} selected)
-          </p>
-          <PdfPageGrid
-            pages={thumbnails}
-            selectable
-            selectedPages={selectedPages}
-            onTogglePage={togglePage}
-          />
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <GripVertical className="h-4 w-4" />
+            <span>Drag and drop pages to reorder them</span>
+          </div>
+          <PdfPageGrid pages={pages} draggable onReorder={handleReorder} />
         </div>
       )}
 
-      {processing && <ProcessingProgress label="Extracting pages…" progress={progress} />}
+      {processing && <ProcessingProgress label="Reordering pages…" progress={progress} />}
 
-      {thumbnails.length > 0 && !processing && (
+      {pages.length > 0 && !processing && (
         <div className="mt-6 flex justify-center">
           <Button
             size="lg"
-            onClick={handleExtract}
-            disabled={selectedPages.size === 0}
+            onClick={handleSave}
             className="gap-2 bg-gradient-hero text-primary-foreground hover:opacity-90"
           >
             <Download className="h-4 w-4" />
-            Extract {selectedPages.size} Pages
+            Save & Download
           </Button>
         </div>
       )}
@@ -110,4 +98,4 @@ const ExtractPages = () => {
   );
 };
 
-export default ExtractPages;
+export default ReorderPages;
