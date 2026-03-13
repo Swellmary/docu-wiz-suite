@@ -16,6 +16,7 @@ import PageNumbersPdf from "./pages/PageNumbersPdf";
 import MetadataPdf from "./pages/MetadataPdf";
 import ExtractPages from "./pages/ExtractPages";
 import RemovePages from "./pages/RemovePages";
+import ReorderPages from "./pages/ReorderPages";
 import About from "./pages/About";
 import GenericToolPage from "./pages/GenericToolPage";
 import NotFound from "./pages/NotFound";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/metadata" element={<MetadataPdf />} />
             <Route path="/extract-pages" element={<ExtractPages />} />
             <Route path="/remove-pages" element={<RemovePages />} />
+            <Route path="/organize" element={<ReorderPages />} />
             <Route path="/about" element={<About />} />
             <Route path="/privacy" element={<About />} />
             <Route path="/terms" element={<About />} />
