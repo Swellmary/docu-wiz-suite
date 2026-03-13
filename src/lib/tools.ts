@@ -18,12 +18,13 @@ export interface PdfTool {
 }
 
 export const tools: PdfTool[] = [
-  // Management
-  { id: "merge", name: "Merge PDF", description: "Combine multiple PDFs into one", icon: FileStack, category: "manage", path: "/merge", color: "tool-merge" },
-  { id: "split", name: "Split PDF", description: "Separate a PDF into individual pages", icon: Scissors, category: "manage", path: "/split", color: "tool-merge" },
-  { id: "remove-pages", name: "Remove Pages", description: "Delete pages from your PDF", icon: Trash2, category: "manage", path: "/remove-pages", color: "tool-merge" },
-  { id: "extract-pages", name: "Extract Pages", description: "Pull out specific pages", icon: FileOutput, category: "manage", path: "/extract-pages", color: "tool-merge" },
-  { id: "organize", name: "Organize Pages", description: "Reorder PDF pages with drag & drop", icon: GripVertical, category: "manage", path: "/organize", color: "tool-merge" },
+  // PDF Organization Tools
+  { id: "merge", name: "Merge PDF", description: "Combine multiple PDFs into one", icon: FileStack, category: "organize", path: "/merge", color: "tool-merge" },
+  { id: "split", name: "Split PDF", description: "Split by page range or extract individual pages", icon: Scissors, category: "organize", path: "/split", color: "tool-merge" },
+  { id: "extract-pages", name: "Extract Pages", description: "Select specific pages and export as new PDF", icon: FileOutput, category: "organize", path: "/extract-pages", color: "tool-merge" },
+  { id: "remove-pages", name: "Delete Pages", description: "Remove specific pages from your PDF", icon: Trash2, category: "organize", path: "/remove-pages", color: "tool-merge" },
+  { id: "organize", name: "Reorder Pages", description: "Drag & drop page reordering", icon: GripVertical, category: "organize", path: "/organize", color: "tool-merge" },
+  { id: "rotate", name: "Rotate Pages", description: "Rotate selected pages 90° or 180°", icon: RotateCw, category: "organize", path: "/rotate", color: "tool-merge" },
 
   // Conversion
   { id: "pdf-to-jpg", name: "PDF to JPG", description: "Convert PDF pages to images", icon: Image, category: "convert", path: "/pdf-to-jpg", color: "tool-convert" },
