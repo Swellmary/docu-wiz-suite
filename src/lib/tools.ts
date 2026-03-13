@@ -5,7 +5,7 @@ import {
   Wrench, Unlock, Lock, Info, Edit, Eye,
 } from "lucide-react";
 
-export type ToolCategory = "manage" | "convert" | "edit" | "security" | "extra";
+export type ToolCategory = "organize" | "manage" | "convert" | "edit" | "security" | "extra";
 
 export interface PdfTool {
   id: string;
