@@ -241,7 +241,7 @@ export default function EditorCanvas({
     if (activeTool !== "select") return;
     const pos = getRelPos(e);
     const ann = annotations.find((a) => a.id === id);
-    if (!ann) return;
+    if (!ann || !("position" in ann)) return;
     setSelectedId(id);
     setDragging({ id, offsetX: pos.x - ann.position.x, offsetY: pos.y - ann.position.y });
   };
