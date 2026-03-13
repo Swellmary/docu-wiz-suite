@@ -10,8 +10,8 @@ interface PagePanelProps {
   currentPage: number;
   onSelectPage: (idx: number) => void;
   onReorder: (pages: EditorPage[]) => void;
-  onDelete: (pageIndex: number) => void;
-  onDuplicate: (pageIndex: number) => void;
+  onDelete: (id: string) => void;
+  onDuplicate: (id: string) => void;
 }
 
 export default function PagePanel({
@@ -53,10 +53,10 @@ export default function PagePanel({
       <div className="p-2 text-xs font-semibold text-muted-foreground border-b">Pages</div>
       <div className="p-1.5 space-y-1.5">
         {visiblePages.map((page, vIdx) => {
-          const thumb = thumbnails.find((t) => t.pageNumber === page.pageIndex + 1);
+          const thumb = thumbnails.find((t) => t.pageNumber === page.sourcePageIndex + 1);
           return (
             <div
-              key={page.pageIndex}
+              key={page.id}
               className={cn(
                 "group relative rounded-md border cursor-pointer overflow-hidden transition-all",
                 currentPage === vIdx
@@ -86,14 +86,14 @@ export default function PagePanel({
                 <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     className="p-0.5 rounded hover:bg-accent"
-                    onClick={(e) => { e.stopPropagation(); onDuplicate(page.pageIndex); }}
+                    onClick={(e) => { e.stopPropagation(); onDuplicate(page.id); }}
                     title="Duplicate"
                   >
                     <Copy className="h-2.5 w-2.5 text-muted-foreground" />
                   </button>
                   <button
                     className="p-0.5 rounded hover:bg-destructive/10"
-                    onClick={(e) => { e.stopPropagation(); onDelete(page.pageIndex); }}
+                    onClick={(e) => { e.stopPropagation(); onDelete(page.id); }}
                     title="Delete"
                   >
                     <Trash2 className="h-2.5 w-2.5 text-destructive" />

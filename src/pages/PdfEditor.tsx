@@ -41,10 +41,12 @@ const PdfEditor = () => {
     setLoading(true);
     try {
       const buf = await f.arrayBuffer();
-      setPdfBytes(buf);
+      // Use slice(0) to create a copy, preventing "detached ArrayBuffer" errors
+      // if one library (pdfjs or pdf-lib) detaches the buffer during processing.
+      setPdfBytes(buf.slice(0));
       setFile(f);
 
-      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      const pdf = await pdfjsLib.getDocument({ data: buf.slice(0) }).promise;
       const total = pdf.numPages;
       editor.initPages(total);
 
@@ -73,7 +75,8 @@ const PdfEditor = () => {
       setThumbnails(thumbs);
       setPageImages(imgs);
       toast.success(`Loaded ${total} pages`);
-    } catch {
+    } catch (err) {
+      console.error(err);
       toast.error("Failed to load PDF");
     } finally {
       setLoading(false);
@@ -93,13 +96,13 @@ const PdfEditor = () => {
 
   const onImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
-    if (!f) return;
+    if (!f || !currentVisible) return;
     const reader = new FileReader();
     reader.onload = () => {
       const ann: ImageAnnotation = {
         type: "image",
         id: `img-${Date.now()}`,
-        pageIndex: currentVisible?.pageIndex ?? 0,
+        pageId: currentVisible.id,
         position: { x: 50, y: 50 },
         size: { width: 150, height: 150 },
         dataUrl: reader.result as string,
@@ -112,10 +115,11 @@ const PdfEditor = () => {
   };
 
   const onSignature = (dataUrl: string) => {
+    if (!currentVisible) return;
     const ann: SignatureAnnotation = {
       type: "signature",
       id: `sig-${Date.now()}`,
-      pageIndex: currentVisible?.pageIndex ?? 0,
+      pageId: currentVisible.id,
       position: { x: 100, y: 100 },
       size: { width: 200, height: 60 },
       dataUrl,
@@ -125,98 +129,151 @@ const PdfEditor = () => {
   };
 
   const handleExport = async (options: ExportOptions) => {
-    if (!pdfBytes) return;
+    if (!pdfBytes || !file) return;
     setExporting(true);
     try {
-      const doc = await PDFDocument.load(pdfBytes);
-      const pdfPages = doc.getPages();
+      const sourceDoc = await PDFDocument.load(pdfBytes);
+      const outDoc = await PDFDocument.create();
 
-      // Remove deleted pages (in reverse to keep indices)
-      const deletedIndices = state.pages
-        .filter((p) => p.deleted)
-        .map((p) => p.pageIndex)
-        .sort((a, b) => b - a);
-      for (const idx of deletedIndices) {
-        if (idx < pdfPages.length) doc.removePage(idx);
-      }
+      // Prepare fonts
+      const font = await outDoc.embedFont(StandardFonts.Helvetica);
+      const fontBold = await outDoc.embedFont(StandardFonts.HelveticaBold);
 
-      // Apply annotations to pages
-      const font = await doc.embedFont(StandardFonts.HelveticaBold);
-      const remainingPages = doc.getPages();
-
-      for (const ann of state.annotations) {
-        if (ann.type === "text") {
-          const pageIdx = visiblePages.findIndex((p) => p.pageIndex === ann.pageIndex);
-          if (pageIdx < 0 || pageIdx >= remainingPages.length) continue;
-          const page = remainingPages[pageIdx];
-          const { height } = page.getSize();
-          const scale = page.getSize().width / (pageImages.get(ann.pageIndex + 1)?.w ?? page.getSize().width) * RENDER_SCALE;
-          page.drawText(ann.text, {
-            x: ann.position.x * scale,
-            y: height - ann.position.y * scale - ann.fontSize * scale,
-            size: ann.fontSize * scale,
-            font,
-            color: hexToRgb(ann.color),
-          });
+      // Iterate through visible pages to build the output PDF
+      for (const pageInfo of visiblePages) {
+        // Copy the original page structure from source
+        const [copiedPage] = await outDoc.copyPages(sourceDoc, [pageInfo.sourcePageIndex]);
+        const page = outDoc.addPage(copiedPage);
+        const { width: pw, height: ph } = page.getSize();
+        
+        // Apply rotation if needed
+        if (pageInfo.rotation !== 0) {
+          page.setRotation(degrees(pageInfo.rotation));
         }
-        if (ann.type === "image" || ann.type === "signature") {
-          const pageIdx = visiblePages.findIndex((p) => p.pageIndex === ann.pageIndex);
-          if (pageIdx < 0 || pageIdx >= remainingPages.length) continue;
-          const page = remainingPages[pageIdx];
-          const { height, width: pw } = page.getSize();
-          const scale = pw / (pageImages.get(ann.pageIndex + 1)?.w ?? pw) * RENDER_SCALE;
-          try {
-            const imgData = ann.dataUrl;
-            let img;
-            if (imgData.includes("image/png")) {
-              img = await doc.embedPng(imgData);
-            } else {
-              img = await doc.embedJpg(imgData);
-            }
-            page.drawImage(img, {
+
+        // Get original dimensions for scaling (RENDER_SCALE was used for UI)
+        const uiDim = pageImages.get(pageInfo.sourcePageIndex + 1);
+        const scale = uiDim ? pw / (uiDim.w / RENDER_SCALE) : 1;
+
+        // Filter annotations for this specific page instance
+        const pageAnns = state.annotations.filter((a) => (a as any).pageId === pageInfo.id);
+
+        for (const ann of pageAnns) {
+          if (ann.type === "text") {
+            page.drawText(ann.text, {
               x: ann.position.x * scale,
-              y: height - ann.position.y * scale - ann.size.height * scale,
+              y: ph - (ann.position.y * scale) - (ann.fontSize * scale),
+              size: ann.fontSize * scale,
+              font: ann.fontWeight === "bold" ? fontBold : font,
+              color: hexToRgb(ann.color),
+            });
+          } else if (ann.type === "image" || ann.type === "signature") {
+             const imgData = ann.dataUrl;
+             const img = imgData.includes("image/png") 
+               ? await outDoc.embedPng(imgData) 
+               : await outDoc.embedJpg(imgData);
+             
+             page.drawImage(img, {
+               x: ann.position.x * scale,
+               y: ph - (ann.position.y * scale) - (ann.size.height * scale),
+               width: ann.size.width * scale,
+               height: ann.size.height * scale,
+             });
+          } else if (ann.type === "draw") {
+            if (ann.shape === "freehand" || ann.shape === "eraser") {
+              if (ann.points.length > 1) {
+                for (let i = 0; i < ann.points.length - 1; i++) {
+                  const start = ann.points[i];
+                  const end = ann.points[i+1];
+                  page.drawLine({
+                    start: { x: start.x * scale, y: ph - start.y * scale },
+                    end: { x: end.x * scale, y: ph - end.y * scale },
+                    thickness: ann.strokeWidth * scale,
+                    color: hexToRgb(ann.color),
+                    opacity: ann.shape === "eraser" ? 0 : 1, // Basic eraser support
+                  });
+                }
+              }
+            } else if (ann.startPos && ann.endPos) {
+              const x = Math.min(ann.startPos.x, ann.endPos.x) * scale;
+              const y = ph - Math.max(ann.startPos.y, ann.endPos.y) * scale;
+              const w = Math.abs(ann.endPos.x - ann.startPos.x) * scale;
+              const h = Math.abs(ann.endPos.y - ann.startPos.y) * scale;
+              
+              if (ann.shape === "rectangle") {
+                page.drawRectangle({
+                  x, y, width: w, height: h,
+                  borderColor: hexToRgb(ann.color),
+                  borderWidth: ann.strokeWidth * scale,
+                });
+              } else if (ann.shape === "circle") {
+                (page as any).drawEllipse({
+                  x: x + w/2, y: y + h/2,
+                  xRadius: w/2,
+                  yRadius: h/2,
+                  borderColor: hexToRgb(ann.color),
+                  borderWidth: ann.strokeWidth * scale,
+                });
+              }
+            }
+          } else if (ann.type === "highlight") {
+            page.drawRectangle({
+              x: ann.position.x * scale,
+              y: ph - ann.position.y * scale - ann.size.height * scale,
               width: ann.size.width * scale,
               height: ann.size.height * scale,
+              color: hexToRgb(ann.color),
+              opacity: ann.style === "highlight" ? 0.3 : 1,
+              // Underline/strikethrough would need line drawing, but rectangle covers basic highlight
             });
-          } catch {
-            // skip if embedding fails
+            if (ann.style === "underline") {
+                page.drawLine({
+                    start: { x: ann.position.x * scale, y: ph - (ann.position.y + ann.size.height) * scale },
+                    end: { x: (ann.position.x + ann.size.width) * scale, y: ph - (ann.position.y + ann.size.height) * scale },
+                    thickness: 2 * scale,
+                    color: hexToRgb(ann.color),
+                });
+            } else if (ann.style === "strikethrough") {
+                page.drawLine({
+                    start: { x: ann.position.x * scale, y: ph - (ann.position.y + ann.size.height/2) * scale },
+                    end: { x: (ann.position.x + ann.size.width) * scale, y: ph - (ann.position.y + ann.size.height/2) * scale },
+                    thickness: 2 * scale,
+                    color: hexToRgb(ann.color),
+                });
+            }
           }
         }
-      }
 
-      // Watermark
-      if (options.addWatermark && options.watermarkText.trim()) {
-        const wFont = await doc.embedFont(StandardFonts.HelveticaBold);
-        for (const page of doc.getPages()) {
-          const { width, height } = page.getSize();
-          const fontSize = Math.min(width, height) * 0.08;
-          const tw = wFont.widthOfTextAtSize(options.watermarkText, fontSize);
-          page.drawText(options.watermarkText, {
-            x: (width - tw) / 2,
-            y: height / 2,
-            size: fontSize,
-            font: wFont,
-            color: rgb(0.7, 0.7, 0.7),
-            opacity: options.watermarkOpacity / 100,
-            rotate: degrees(-45),
-          });
+        // Watermark
+        if (options.addWatermark && options.watermarkText.trim()) {
+           const wFont = await outDoc.embedFont(StandardFonts.HelveticaBold);
+           const fontSize = Math.min(pw, ph) * 0.08;
+           const tw = wFont.widthOfTextAtSize(options.watermarkText, fontSize);
+           page.drawText(options.watermarkText, {
+             x: (pw - tw) / 2,
+             y: ph / 2,
+             size: fontSize,
+             font: wFont,
+             color: rgb(0.7, 0.7, 0.7),
+             opacity: options.watermarkOpacity / 100,
+             rotate: degrees(-45),
+           });
         }
       }
 
-      const output = await doc.save();
-      downloadPdf(output, `edited_${file?.name ?? "document.pdf"}`);
+      const output = await outDoc.save();
+      downloadPdf(output, `edited_${file.name}`);
       toast.success("PDF exported successfully!");
       setExportOpen(false);
     } catch (err) {
       console.error(err);
-      toast.error("Export failed");
+      toast.error("Export failed. Please check console.");
     } finally {
       setExporting(false);
     }
   };
 
-  const currentImg = currentVisible ? pageImages.get(currentVisible.pageIndex + 1) : null;
+  const currentImg = currentVisible ? pageImages.get(currentVisible.sourcePageIndex + 1) : null;
 
   // Upload screen
   if (!file) {
@@ -296,7 +353,7 @@ const PdfEditor = () => {
             zoom={state.zoom}
             activeTool={state.activeTool}
             annotations={state.annotations}
-            currentPageIndex={currentVisible?.pageIndex ?? 0}
+            currentPageId={currentVisible?.id ?? ""}
             textColor={state.textColor}
             textFontSize={state.textFontSize}
             textBold={state.textBold}

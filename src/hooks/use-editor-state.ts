@@ -100,7 +100,8 @@ export function useEditorState() {
 
   const initPages = useCallback((count: number) => {
     const pages: EditorPage[] = Array.from({ length: count }, (_, i) => ({
-      pageIndex: i,
+      id: `page-${i}`,
+      sourcePageIndex: i,
       rotation: 0,
       deleted: false,
     }));
@@ -111,21 +112,39 @@ export function useEditorState() {
     setState((s) => ({ ...s, pages: newPages }));
   }, []);
 
-  const deletePage = useCallback((pageIndex: number) => {
+  const deletePage = useCallback((id: string) => {
     setState((s) => ({
       ...s,
-      pages: s.pages.map((p) => (p.pageIndex === pageIndex ? { ...p, deleted: true } : p)),
+      pages: s.pages.map((p) => (p.id === id ? { ...p, deleted: true } : p)),
     }));
   }, []);
 
-  const duplicatePage = useCallback((pageIndex: number) => {
+  const duplicatePage = useCallback((id: string) => {
     setState((s) => {
-      const idx = s.pages.findIndex((p) => p.pageIndex === pageIndex);
+      const idx = s.pages.findIndex((p) => p.id === id);
       if (idx === -1) return s;
-      const dup: EditorPage = { ...s.pages[idx], pageIndex: s.pages.length + 100 + Math.random() };
+      const original = s.pages[idx];
+      const newId = `page-${original.sourcePageIndex}-dup-${Date.now()}`;
+      const dup: EditorPage = { 
+        ...original, 
+        id: newId
+      };
+      
+      // Duplicate annotations for this page
+      const pageAnns = s.annotations.filter(a => (a as any).pageId === id);
+      const duplicatedAnns = pageAnns.map(a => ({
+        ...a,
+        id: `${a.id}-dup-${Date.now()}`,
+        pageId: newId
+      } as Annotation));
+
       const newPages = [...s.pages];
       newPages.splice(idx + 1, 0, dup);
-      return { ...s, pages: newPages };
+      return { 
+        ...s, 
+        pages: newPages,
+        annotations: [...s.annotations, ...duplicatedAnns]
+      };
     });
   }, []);
 

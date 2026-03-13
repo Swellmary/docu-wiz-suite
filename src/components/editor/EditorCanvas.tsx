@@ -21,7 +21,7 @@ interface EditorCanvasProps {
   zoom: number;
   activeTool: EditorTool;
   annotations: Annotation[];
-  currentPageIndex: number;
+  currentPageId: string;
   // tool settings
   textColor: string;
   textFontSize: number;
@@ -50,7 +50,7 @@ export default function EditorCanvas({
   zoom,
   activeTool,
   annotations,
-  currentPageIndex,
+  currentPageId,
   textColor,
   textFontSize,
   textBold,
@@ -75,7 +75,7 @@ export default function EditorCanvas({
   const [resizing, setResizing] = useState<{ id: string; corner: string } | null>(null);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
 
-  const pageAnns = annotations.filter((a) => a.pageIndex === currentPageIndex);
+  const pageAnns = annotations.filter((a) => a.pageId === currentPageId);
   const w = pageWidth * zoom;
   const h = pageHeight * zoom;
 
@@ -96,7 +96,7 @@ export default function EditorCanvas({
       const ann: TextAnnotation = {
         type: "text",
         id,
-        pageIndex: currentPageIndex,
+        pageId: currentPageId,
         position: pos,
         text: "Text",
         fontSize: textFontSize,
@@ -116,7 +116,7 @@ export default function EditorCanvas({
         setCurrentDraw({
           type: "draw",
           id: nextId(),
-          pageIndex: currentPageIndex,
+          pageId: currentPageId,
           points: [pos],
           color: drawShape === "eraser" ? "#ffffff" : drawColor,
           strokeWidth: drawShape === "eraser" ? drawStrokeWidth * 3 : drawStrokeWidth,
@@ -126,7 +126,7 @@ export default function EditorCanvas({
         setCurrentDraw({
           type: "draw",
           id: nextId(),
-          pageIndex: currentPageIndex,
+          pageId: currentPageId,
           points: [],
           color: drawColor,
           strokeWidth: drawStrokeWidth,
@@ -224,7 +224,7 @@ export default function EditorCanvas({
         const ann: HighlightAnnotation = {
           type: "highlight",
           id: nextId(),
-          pageIndex: currentPageIndex,
+          pageId: currentPageId,
           position: { x, y },
           size: { width: w, height: h },
           color: highlightColor,

@@ -15,7 +15,7 @@ export interface Size {
 export interface TextAnnotation {
   type: "text";
   id: string;
-  pageIndex: number;
+  pageId: string;
   position: Position;
   text: string;
   fontSize: number;
@@ -27,7 +27,7 @@ export interface TextAnnotation {
 export interface HighlightAnnotation {
   type: "highlight";
   id: string;
-  pageIndex: number;
+  pageId: string;
   position: Position;
   size: Size;
   color: string;
@@ -37,7 +37,7 @@ export interface HighlightAnnotation {
 export interface DrawAnnotation {
   type: "draw";
   id: string;
-  pageIndex: number;
+  pageId: string;
   points: Position[];
   color: string;
   strokeWidth: number;
@@ -49,7 +49,7 @@ export interface DrawAnnotation {
 export interface ImageAnnotation {
   type: "image";
   id: string;
-  pageIndex: number;
+  pageId: string;
   position: Position;
   size: Size;
   dataUrl: string;
@@ -58,7 +58,7 @@ export interface ImageAnnotation {
 export interface SignatureAnnotation {
   type: "signature";
   id: string;
-  pageIndex: number;
+  pageId: string;
   position: Position;
   size: Size;
   dataUrl: string;
@@ -72,7 +72,8 @@ export type Annotation =
   | SignatureAnnotation;
 
 export interface EditorPage {
-  pageIndex: number;
+  id: string;
+  sourcePageIndex: number;
   rotation: number;
   deleted: boolean;
 }
