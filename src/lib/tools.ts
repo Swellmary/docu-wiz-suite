@@ -38,7 +38,7 @@ export const tools: PdfTool[] = [
 
   // Editing
   { id: "compress", name: "Compress PDF", description: "Reduce PDF file size", icon: Minimize2, category: "edit", path: "/compress", color: "tool-edit" },
-  { id: "rotate", name: "Rotate PDF", description: "Rotate PDF pages", icon: RotateCw, category: "edit", path: "/rotate", color: "tool-edit" },
+  
   { id: "watermark", name: "Add Watermark", description: "Stamp text on your PDF", icon: Droplets, category: "edit", path: "/watermark", color: "tool-edit" },
   { id: "page-numbers", name: "Page Numbers", description: "Add page numbers to your PDF", icon: Hash, category: "edit", path: "/page-numbers", color: "tool-edit" },
   { id: "repair", name: "Repair PDF", description: "Try to fix corrupted PDFs", icon: Wrench, category: "edit", path: "/repair", color: "tool-edit" },
