@@ -58,6 +58,7 @@ export const popularTools = tools.filter(t =>
 );
 
 export const categoryLabels: Record<ToolCategory, string> = {
+  organize: "PDF Organization Tools",
   manage: "PDF Management",
   convert: "PDF Conversion",
   edit: "PDF Editing",
