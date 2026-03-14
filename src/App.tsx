@@ -18,8 +18,17 @@ import ExtractPages from "./pages/ExtractPages";
 import RemovePages from "./pages/RemovePages";
 import ReorderPages from "./pages/ReorderPages";
 import PdfEditor from "./pages/PdfEditor";
+import PdfToJpg from "./pages/PdfToJpg";
+import PdfToWord from "./pages/PdfToWord";
+import PdfToPpt from "./pages/PdfToPpt";
+import PdfToExcel from "./pages/PdfToExcel";
+import WordToPdf from "./pages/WordToPdf";
+import PptToPdf from "./pages/PptToPdf";
+import ExcelToPdf from "./pages/ExcelToPdf";
+import RepairPdf from "./pages/RepairPdf";
+import UnlockPdf from "./pages/UnlockPdf";
+import PdfPreview from "./pages/PdfPreview";
 import About from "./pages/About";
-import GenericToolPage from "./pages/GenericToolPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,10 +55,19 @@ const App = () => (
             <Route path="/remove-pages" element={<RemovePages />} />
             <Route path="/organize" element={<ReorderPages />} />
             <Route path="/editor" element={<PdfEditor />} />
+            <Route path="/pdf-to-jpg" element={<PdfToJpg />} />
+            <Route path="/pdf-to-word" element={<PdfToWord />} />
+            <Route path="/pdf-to-ppt" element={<PdfToPpt />} />
+            <Route path="/pdf-to-excel" element={<PdfToExcel />} />
+            <Route path="/word-to-pdf" element={<WordToPdf />} />
+            <Route path="/ppt-to-pdf" element={<PptToPdf />} />
+            <Route path="/excel-to-pdf" element={<ExcelToPdf />} />
+            <Route path="/repair" element={<RepairPdf />} />
+            <Route path="/unlock" element={<UnlockPdf />} />
+            <Route path="/preview" element={<PdfPreview />} />
             <Route path="/about" element={<About />} />
             <Route path="/privacy" element={<About />} />
             <Route path="/terms" element={<About />} />
-            <Route path="/:toolId" element={<GenericToolPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>
