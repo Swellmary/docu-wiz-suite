@@ -1,8 +1,8 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import { toast } from "sonner";
-import { Upload, ChevronLeft, ChevronRight } from "lucide-react";
+import { Upload, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EditorToolbar from "@/components/editor/EditorToolbar";
@@ -21,17 +21,20 @@ const RENDER_SCALE = 2;
 
 const PdfEditor = () => {
   const [file, setFile] = useState<File | null>(null);
-  const [pdfBytes, setPdfBytes] = useState<ArrayBuffer | null>(null);
+  const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
   const [thumbnails, setThumbnails] = useState<PageThumbnail[]>([]);
   const [pageImages, setPageImages] = useState<Map<number, { url: string; w: number; h: number }>>(new Map());
   const [loading, setLoading] = useState(false);
   const [sigOpen, setSigOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imgInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditorState();
+  const editorRef = useRef(editor);
+  editorRef.current = editor;
   const { state } = editor;
 
   const visiblePages = state.pages.filter((p) => !p.deleted);
@@ -41,14 +44,13 @@ const PdfEditor = () => {
     setLoading(true);
     try {
       const buf = await f.arrayBuffer();
-      // Use slice(0) to create a copy, preventing "detached ArrayBuffer" errors
-      // if one library (pdfjs or pdf-lib) detaches the buffer during processing.
-      setPdfBytes(buf.slice(0));
+      const bytes = new Uint8Array(buf);
+      setPdfBytes(bytes);
       setFile(f);
 
-      const pdf = await pdfjsLib.getDocument({ data: buf.slice(0) }).promise;
+      const pdf = await pdfjsLib.getDocument({ data: bytes.slice(0) }).promise;
       const total = pdf.numPages;
-      editor.initPages(total);
+      editorRef.current.initPages(total);
 
       const thumbs: PageThumbnail[] = [];
       const imgs = new Map<number, { url: string; w: number; h: number }>();
@@ -74,20 +76,22 @@ const PdfEditor = () => {
 
       setThumbnails(thumbs);
       setPageImages(imgs);
-      toast.success(`Loaded ${total} pages`);
+      toast.success(`Loaded ${total} page${total > 1 ? "s" : ""}`);
     } catch (err) {
       console.error(err);
       toast.error("Failed to load PDF");
     } finally {
       setLoading(false);
     }
-  }, [editor]);
+  }, []);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
+      setIsDragOver(false);
       const f = e.dataTransfer.files[0];
       if (f?.type === "application/pdf") loadPdf(f);
+      else toast.error("Please drop a PDF file");
     },
     [loadPdf]
   );
@@ -135,62 +139,60 @@ const PdfEditor = () => {
       const sourceDoc = await PDFDocument.load(pdfBytes);
       const outDoc = await PDFDocument.create();
 
-      // Prepare fonts
       const font = await outDoc.embedFont(StandardFonts.Helvetica);
       const fontBold = await outDoc.embedFont(StandardFonts.HelveticaBold);
 
-      // Iterate through visible pages to build the output PDF
       for (const pageInfo of visiblePages) {
-        // Copy the original page structure from source
         const [copiedPage] = await outDoc.copyPages(sourceDoc, [pageInfo.sourcePageIndex]);
         const page = outDoc.addPage(copiedPage);
         const { width: pw, height: ph } = page.getSize();
-        
-        // Apply rotation if needed
+
         if (pageInfo.rotation !== 0) {
           page.setRotation(degrees(pageInfo.rotation));
         }
 
-        // Get original dimensions for scaling (RENDER_SCALE was used for UI)
         const uiDim = pageImages.get(pageInfo.sourcePageIndex + 1);
         const scale = uiDim ? pw / (uiDim.w / RENDER_SCALE) : 1;
 
-        // Filter annotations for this specific page instance
-        const pageAnns = state.annotations.filter((a) => (a as any).pageId === pageInfo.id);
+        const pageAnns = state.annotations.filter((a) => a.pageId === pageInfo.id);
 
         for (const ann of pageAnns) {
           if (ann.type === "text") {
             page.drawText(ann.text, {
               x: ann.position.x * scale,
-              y: ph - (ann.position.y * scale) - (ann.fontSize * scale),
+              y: ph - ann.position.y * scale - ann.fontSize * scale,
               size: ann.fontSize * scale,
               font: ann.fontWeight === "bold" ? fontBold : font,
               color: hexToRgb(ann.color),
             });
           } else if (ann.type === "image" || ann.type === "signature") {
-             const imgData = ann.dataUrl;
-             const img = imgData.includes("image/png") 
-               ? await outDoc.embedPng(imgData) 
-               : await outDoc.embedJpg(imgData);
-             
-             page.drawImage(img, {
-               x: ann.position.x * scale,
-               y: ph - (ann.position.y * scale) - (ann.size.height * scale),
-               width: ann.size.width * scale,
-               height: ann.size.height * scale,
-             });
+            try {
+              const imgData = ann.dataUrl;
+              const img = imgData.includes("image/png")
+                ? await outDoc.embedPng(imgData)
+                : await outDoc.embedJpg(imgData);
+
+              page.drawImage(img, {
+                x: ann.position.x * scale,
+                y: ph - ann.position.y * scale - ann.size.height * scale,
+                width: ann.size.width * scale,
+                height: ann.size.height * scale,
+              });
+            } catch (imgErr) {
+              console.warn("Failed to embed image/signature:", imgErr);
+            }
           } else if (ann.type === "draw") {
             if (ann.shape === "freehand" || ann.shape === "eraser") {
               if (ann.points.length > 1) {
                 for (let i = 0; i < ann.points.length - 1; i++) {
                   const start = ann.points[i];
-                  const end = ann.points[i+1];
+                  const end = ann.points[i + 1];
                   page.drawLine({
                     start: { x: start.x * scale, y: ph - start.y * scale },
                     end: { x: end.x * scale, y: ph - end.y * scale },
                     thickness: ann.strokeWidth * scale,
                     color: hexToRgb(ann.color),
-                    opacity: ann.shape === "eraser" ? 0 : 1, // Basic eraser support
+                    opacity: ann.shape === "eraser" ? 0 : 1,
                   });
                 }
               }
@@ -199,7 +201,7 @@ const PdfEditor = () => {
               const y = ph - Math.max(ann.startPos.y, ann.endPos.y) * scale;
               const w = Math.abs(ann.endPos.x - ann.startPos.x) * scale;
               const h = Math.abs(ann.endPos.y - ann.startPos.y) * scale;
-              
+
               if (ann.shape === "rectangle") {
                 page.drawRectangle({
                   x, y, width: w, height: h,
@@ -207,57 +209,58 @@ const PdfEditor = () => {
                   borderWidth: ann.strokeWidth * scale,
                 });
               } else if (ann.shape === "circle") {
-                (page as any).drawEllipse({
-                  x: x + w/2, y: y + h/2,
-                  xRadius: w/2,
-                  yRadius: h/2,
+                page.drawEllipse({
+                  x: x + w / 2,
+                  y: y + h / 2,
+                  xScale: w / 2,
+                  yScale: h / 2,
                   borderColor: hexToRgb(ann.color),
                   borderWidth: ann.strokeWidth * scale,
                 });
               }
             }
           } else if (ann.type === "highlight") {
-            page.drawRectangle({
-              x: ann.position.x * scale,
-              y: ph - ann.position.y * scale - ann.size.height * scale,
-              width: ann.size.width * scale,
-              height: ann.size.height * scale,
-              color: hexToRgb(ann.color),
-              opacity: ann.style === "highlight" ? 0.3 : 1,
-              // Underline/strikethrough would need line drawing, but rectangle covers basic highlight
-            });
-            if (ann.style === "underline") {
-                page.drawLine({
-                    start: { x: ann.position.x * scale, y: ph - (ann.position.y + ann.size.height) * scale },
-                    end: { x: (ann.position.x + ann.size.width) * scale, y: ph - (ann.position.y + ann.size.height) * scale },
-                    thickness: 2 * scale,
-                    color: hexToRgb(ann.color),
-                });
+            if (ann.style === "highlight") {
+              page.drawRectangle({
+                x: ann.position.x * scale,
+                y: ph - ann.position.y * scale - ann.size.height * scale,
+                width: ann.size.width * scale,
+                height: ann.size.height * scale,
+                color: hexToRgb(ann.color),
+                opacity: 0.3,
+              });
+            } else if (ann.style === "underline") {
+              page.drawLine({
+                start: { x: ann.position.x * scale, y: ph - (ann.position.y + ann.size.height) * scale },
+                end: { x: (ann.position.x + ann.size.width) * scale, y: ph - (ann.position.y + ann.size.height) * scale },
+                thickness: 2 * scale,
+                color: hexToRgb(ann.color),
+              });
             } else if (ann.style === "strikethrough") {
-                page.drawLine({
-                    start: { x: ann.position.x * scale, y: ph - (ann.position.y + ann.size.height/2) * scale },
-                    end: { x: (ann.position.x + ann.size.width) * scale, y: ph - (ann.position.y + ann.size.height/2) * scale },
-                    thickness: 2 * scale,
-                    color: hexToRgb(ann.color),
-                });
+              page.drawLine({
+                start: { x: ann.position.x * scale, y: ph - (ann.position.y + ann.size.height / 2) * scale },
+                end: { x: (ann.position.x + ann.size.width) * scale, y: ph - (ann.position.y + ann.size.height / 2) * scale },
+                thickness: 2 * scale,
+                color: hexToRgb(ann.color),
+              });
             }
           }
         }
 
         // Watermark
         if (options.addWatermark && options.watermarkText.trim()) {
-           const wFont = await outDoc.embedFont(StandardFonts.HelveticaBold);
-           const fontSize = Math.min(pw, ph) * 0.08;
-           const tw = wFont.widthOfTextAtSize(options.watermarkText, fontSize);
-           page.drawText(options.watermarkText, {
-             x: (pw - tw) / 2,
-             y: ph / 2,
-             size: fontSize,
-             font: wFont,
-             color: rgb(0.7, 0.7, 0.7),
-             opacity: options.watermarkOpacity / 100,
-             rotate: degrees(-45),
-           });
+          const wFont = await outDoc.embedFont(StandardFonts.HelveticaBold);
+          const fontSize = Math.min(pw, ph) * 0.08;
+          const tw = wFont.widthOfTextAtSize(options.watermarkText, fontSize);
+          page.drawText(options.watermarkText, {
+            x: (pw - tw) / 2,
+            y: ph / 2,
+            size: fontSize,
+            font: wFont,
+            color: rgb(0.7, 0.7, 0.7),
+            opacity: options.watermarkOpacity / 100,
+            rotate: degrees(-45),
+          });
         }
       }
 
@@ -267,7 +270,7 @@ const PdfEditor = () => {
       setExportOpen(false);
     } catch (err) {
       console.error(err);
-      toast.error("Export failed. Please check console.");
+      toast.error("Export failed. Check console for details.");
     } finally {
       setExporting(false);
     }
@@ -275,15 +278,31 @@ const PdfEditor = () => {
 
   const currentImg = currentVisible ? pageImages.get(currentVisible.sourcePageIndex + 1) : null;
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "z") {
+        e.preventDefault();
+        if (e.shiftKey) editor.redo();
+        else editor.undo();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [editor]);
+
   // Upload screen
   if (!file) {
     return (
       <div className="min-h-[calc(100vh-120px)] flex items-center justify-center p-4">
         <div
-          className="w-full max-w-lg rounded-xl border-2 border-dashed p-12 text-center cursor-pointer transition-all hover:border-primary/40 hover:bg-accent/50"
-          onDragOver={(e) => e.preventDefault()}
+          className={`w-full max-w-lg rounded-xl border-2 border-dashed p-12 text-center cursor-pointer transition-all ${
+            isDragOver ? "border-primary bg-primary/5" : "hover:border-primary/40 hover:bg-accent/50"
+          }`}
+          onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+          onDragLeave={() => setIsDragOver(false)}
           onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => !loading && fileInputRef.current?.click()}
         >
           <input
             ref={fileInputRef}
@@ -293,7 +312,7 @@ const PdfEditor = () => {
             onChange={(e) => e.target.files?.[0] && loadPdf(e.target.files[0])}
           />
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 mx-auto mb-4">
-            <Upload className="h-6 w-6 text-primary" />
+            {loading ? <Loader2 className="h-6 w-6 text-primary animate-spin" /> : <Upload className="h-6 w-6 text-primary" />}
           </div>
           <p className="text-lg font-semibold">{loading ? "Loading PDF…" : "Drop a PDF here or click to upload"}</p>
           <p className="mt-1 text-sm text-muted-foreground">Open a PDF to start editing</p>
