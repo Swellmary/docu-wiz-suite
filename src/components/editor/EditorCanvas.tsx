@@ -89,6 +89,8 @@ export default function EditorCanvas({
 
   const handleMouseDown = (e: MouseEvent) => {
     if (e.button !== 0) return;
+    // Don't create new annotations when clicking on existing text being edited
+    if (editingTextId) return;
     const pos = getRelPos(e);
 
     if (activeTool === "text") {
@@ -98,15 +100,18 @@ export default function EditorCanvas({
         id,
         pageId: currentPageId,
         position: pos,
-        text: "Text",
+        text: "",
         fontSize: textFontSize,
         fontWeight: textBold ? "bold" : "normal",
         fontStyle: textItalic ? "italic" : "normal",
         color: textColor,
       };
       onAddAnnotation(ann);
-      setEditingTextId(id);
-      setSelectedId(id);
+      // Use timeout so the element renders before we set editing
+      setTimeout(() => {
+        setEditingTextId(id);
+        setSelectedId(id);
+      }, 0);
       return;
     }
 
