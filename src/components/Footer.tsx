@@ -5,7 +5,7 @@ import { FeedbackDialog } from "./FeedbackDialog";
 const Footer = () => (
   <footer className="border-t bg-card">
     <div className="container py-12">
-      <div className="grid gap-8 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
         <div>
           <Link to="/" className="flex items-center gap-2 font-bold text-lg mb-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-hero">
