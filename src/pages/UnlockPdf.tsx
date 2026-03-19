@@ -170,7 +170,7 @@ const UnlockPdf = () => {
         <div className="mt-6 mx-auto max-w-md space-y-5">
           {/* Status indicator */}
           {status === "ready" && (
-            <div className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-sm text-green-700 dark:text-green-400">
+            <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 p-3 text-sm text-primary">
               <ShieldCheck className="h-4 w-4 shrink-0" />
               <span>PDF loaded — {pageCount} page{pageCount !== 1 ? "s" : ""} detected. Ready to unlock.</span>
             </div>
