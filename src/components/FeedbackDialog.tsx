@@ -117,7 +117,6 @@ export function FeedbackDialog({ trigger }: FeedbackDialogProps) {
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-hero" />
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-primary" />
