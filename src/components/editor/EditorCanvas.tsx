@@ -350,6 +350,7 @@ export default function EditorCanvas({
           .filter((a) => a.type === "text")
           .map((a) => {
             const t = a as TextAnnotation;
+            const isEditing = editingTextId === t.id;
             return (
               <div
                 key={t.id}
@@ -365,31 +366,54 @@ export default function EditorCanvas({
                   fontStyle: t.fontStyle,
                   color: t.color,
                   minWidth: 40 * zoom,
-                  cursor: activeTool === "select" ? "move" : "default",
+                  zIndex: isEditing ? 50 : 10,
+                  cursor: activeTool === "select" ? "move" : "text",
                 }}
                 onMouseDown={(e) => {
+                  e.stopPropagation();
                   if (activeTool === "select") {
                     startDrag(e, t.id);
                     setSelectedId(t.id);
+                  } else if (activeTool === "text") {
+                    setEditingTextId(t.id);
+                    setSelectedId(t.id);
                   }
                 }}
-                onDoubleClick={() => setEditingTextId(t.id)}
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  setEditingTextId(t.id);
+                  setSelectedId(t.id);
+                }}
               >
-                {editingTextId === t.id ? (
+                {isEditing ? (
                   <input
                     autoFocus
                     className="bg-transparent border-b border-primary outline-none min-w-[60px]"
                     style={{ fontSize: "inherit", fontWeight: "inherit", fontStyle: "inherit", color: "inherit" }}
                     value={t.text}
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
                     onChange={(e) => onUpdateAnnotation(t.id, { text: e.target.value } as Partial<TextAnnotation>)}
-                    onBlur={() => setEditingTextId(null)}
-                    onKeyDown={(e) => e.key === "Enter" && setEditingTextId(null)}
+                    onBlur={() => {
+                      // Remove empty text annotations
+                      if (!t.text.trim()) {
+                        onRemoveAnnotation(t.id);
+                      }
+                      setEditingTextId(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") setEditingTextId(null);
+                      if (e.key === "Escape") {
+                        if (!t.text.trim()) onRemoveAnnotation(t.id);
+                        setEditingTextId(null);
+                      }
+                    }}
                   />
                 ) : (
-                  <span className="whitespace-pre select-none">{t.text}</span>
+                  <span className="whitespace-pre select-none">{t.text || "Click to edit"}</span>
                 )}
-                {selectedId === t.id && (
-                  <button className="absolute -top-3 -right-3 h-5 w-5 rounded-full bg-destructive text-primary-foreground flex items-center justify-center" onClick={() => onRemoveAnnotation(t.id)}>
+                {selectedId === t.id && !isEditing && (
+                  <button className="absolute -top-3 -right-3 h-5 w-5 rounded-full bg-destructive text-primary-foreground flex items-center justify-center" onClick={(e) => { e.stopPropagation(); onRemoveAnnotation(t.id); }}>
                     <X className="h-3 w-3" />
                   </button>
                 )}
