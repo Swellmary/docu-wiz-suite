@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { FileText, Menu, X, ChevronDown } from "lucide-react";
+import { FileText, Menu, X, ChevronDown, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { tools, categoryLabels, ToolCategory } from "@/lib/tools";
 import { cn } from "@/lib/utils";
+import { FeedbackDialog } from "./FeedbackDialog";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -71,6 +72,12 @@ const Navbar = () => {
           <Link to="/about">
             <Button variant={location.pathname === "/about" ? "secondary" : "ghost"} size="sm">About</Button>
           </Link>
+          <FeedbackDialog trigger={
+            <Button variant="ghost" size="sm" className="gap-2 text-primary hover:text-primary hover:bg-primary/10">
+              <MessageSquare className="h-4 w-4" />
+              Feedback
+            </Button>
+          } />
         </div>
 
         {/* Mobile toggle */}
@@ -96,6 +103,13 @@ const Navbar = () => {
             <Link to="/about" onClick={() => setMobileOpen(false)}>
               <Button variant="ghost" className="w-full justify-start">About</Button>
             </Link>
+            <div className="pt-2 border-t mt-1">
+              <FeedbackDialog trigger={
+                <Button variant="outline" className="w-full justify-start gap-2 text-primary border-primary/20 bg-primary/5">
+                  <MessageSquare className="h-4 w-4" /> Feedback
+                </Button>
+              } />
+            </div>
           </div>
         </div>
       )}

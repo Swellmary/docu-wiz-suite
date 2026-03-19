@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { FileText } from "lucide-react";
+import { FileText, MessageSquare } from "lucide-react";
+import { FeedbackDialog } from "./FeedbackDialog";
 
 const Footer = () => (
   <footer className="border-t bg-card">
@@ -40,6 +41,11 @@ const Footer = () => (
             <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
             <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
+            <FeedbackDialog trigger={
+              <button className="text-left hover:text-foreground transition-colors flex items-center gap-1.5 focus:outline-none">
+                Feedback
+              </button>
+            } />
           </div>
         </div>
       </div>
