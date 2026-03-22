@@ -31,6 +31,11 @@ import UnlockPdf from "./pages/UnlockPdf";
 import PdfPreview from "./pages/PdfPreview";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
+import HtmlToPdf from "./pages/HtmlToPdf";
+import UrlToPdf from "./pages/UrlToPdf";
+import MarkdownToPdf from "./pages/MarkdownToPdf";
+import CsvToPdf from "./pages/CsvToPdf";
+import JsonToPdf from "./pages/JsonToPdf";
 
 const queryClient = new QueryClient();
 
