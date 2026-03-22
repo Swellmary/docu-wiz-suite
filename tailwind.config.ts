@@ -66,6 +66,7 @@ export default {
           edit: "hsl(var(--tool-edit))",
           security: "hsl(var(--tool-security))",
           optimize: "hsl(var(--tool-optimize))",
+          webdata: "hsl(var(--tool-webdata))",
         },
       },
       borderRadius: {
