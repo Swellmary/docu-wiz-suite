@@ -3,9 +3,10 @@ import {
   FileText, Presentation, Sheet, Image,
   FileDown, Minimize2, RotateCw, Droplets, Hash,
   Wrench, Unlock, Lock, Info, Edit, Eye,
+  Globe, Link, Type, Table2, Braces,
 } from "lucide-react";
 
-export type ToolCategory = "organize" | "manage" | "convert" | "edit" | "security" | "extra";
+export type ToolCategory = "organize" | "manage" | "convert" | "edit" | "security" | "webdata" | "extra";
 
 export interface PdfTool {
   id: string;
@@ -36,9 +37,15 @@ export const tools: PdfTool[] = [
   { id: "ppt-to-pdf", name: "PPT to PDF", description: "Convert PPTX to PDF", icon: FileDown, category: "convert", path: "/ppt-to-pdf", color: "tool-convert" },
   { id: "excel-to-pdf", name: "Excel to PDF", description: "Convert XLSX to PDF", icon: FileDown, category: "convert", path: "/excel-to-pdf", color: "tool-convert" },
 
+  // Web & Data to PDF
+  { id: "html-to-pdf", name: "HTML to PDF", description: "Convert HTML code or files to PDF", icon: Globe, category: "webdata", path: "/html-to-pdf", color: "tool-webdata" },
+  { id: "url-to-pdf", name: "URL to PDF", description: "Convert any webpage to PDF", icon: Link, category: "webdata", path: "/url-to-pdf", color: "tool-webdata" },
+  { id: "markdown-to-pdf", name: "Markdown to PDF", description: "Convert Markdown text to styled PDF", icon: Type, category: "webdata", path: "/markdown-to-pdf", color: "tool-webdata" },
+  { id: "csv-to-pdf", name: "CSV to PDF", description: "Convert CSV data to formatted PDF table", icon: Table2, category: "webdata", path: "/csv-to-pdf", color: "tool-webdata" },
+  { id: "json-to-pdf", name: "JSON to PDF", description: "Convert JSON data to readable PDF", icon: Braces, category: "webdata", path: "/json-to-pdf", color: "tool-webdata" },
+
   // Editing
   { id: "compress", name: "Compress PDF", description: "Reduce PDF file size", icon: Minimize2, category: "edit", path: "/compress", color: "tool-edit" },
-  
   { id: "watermark", name: "Add Watermark", description: "Stamp text on your PDF", icon: Droplets, category: "edit", path: "/watermark", color: "tool-edit" },
   { id: "page-numbers", name: "Page Numbers", description: "Add page numbers to your PDF", icon: Hash, category: "edit", path: "/page-numbers", color: "tool-edit" },
   { id: "repair", name: "Repair PDF", description: "Try to fix corrupted PDFs", icon: Wrench, category: "edit", path: "/repair", color: "tool-edit" },
@@ -61,6 +68,7 @@ export const categoryLabels: Record<ToolCategory, string> = {
   organize: "PDF Organization Tools",
   manage: "PDF Management",
   convert: "PDF Conversion",
+  webdata: "Web & Data to PDF",
   edit: "PDF Editing",
   security: "Security",
   extra: "Additional Tools",

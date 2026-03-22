@@ -31,6 +31,11 @@ import UnlockPdf from "./pages/UnlockPdf";
 import PdfPreview from "./pages/PdfPreview";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
+import HtmlToPdf from "./pages/HtmlToPdf";
+import UrlToPdf from "./pages/UrlToPdf";
+import MarkdownToPdf from "./pages/MarkdownToPdf";
+import CsvToPdf from "./pages/CsvToPdf";
+import JsonToPdf from "./pages/JsonToPdf";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +72,11 @@ const App = () => (
             <Route path="/repair" element={<RepairPdf />} />
             <Route path="/unlock" element={<UnlockPdf />} />
             <Route path="/preview" element={<PdfPreview />} />
+            <Route path="/html-to-pdf" element={<HtmlToPdf />} />
+            <Route path="/url-to-pdf" element={<UrlToPdf />} />
+            <Route path="/markdown-to-pdf" element={<MarkdownToPdf />} />
+            <Route path="/csv-to-pdf" element={<CsvToPdf />} />
+            <Route path="/json-to-pdf" element={<JsonToPdf />} />
             <Route path="/about" element={<About />} />
             <Route path="/privacy" element={<About />} />
             <Route path="/terms" element={<About />} />
