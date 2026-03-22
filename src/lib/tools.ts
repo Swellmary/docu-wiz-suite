@@ -3,10 +3,10 @@ import {
   FileText, Presentation, Sheet, Image,
   FileDown, Minimize2, RotateCw, Droplets, Hash,
   Wrench, Unlock, Lock, Info, Edit, Eye,
-  Globe, Link, Type, Table2, Braces,
+  Globe, Link, Type, Table2, Braces, Github,
 } from "lucide-react";
 
-export type ToolCategory = "organize" | "manage" | "convert" | "edit" | "security" | "webdata" | "extra";
+export type ToolCategory = "organize" | "manage" | "convert" | "edit" | "security" | "webdata" | "devtools" | "extra";
 
 export interface PdfTool {
   id: string;
