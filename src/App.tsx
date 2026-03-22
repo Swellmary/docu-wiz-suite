@@ -36,6 +36,7 @@ import UrlToPdf from "./pages/UrlToPdf";
 import MarkdownToPdf from "./pages/MarkdownToPdf";
 import CsvToPdf from "./pages/CsvToPdf";
 import JsonToPdf from "./pages/JsonToPdf";
+import GithubToPdf from "./pages/GithubToPdf";
 
 const queryClient = new QueryClient();
 
