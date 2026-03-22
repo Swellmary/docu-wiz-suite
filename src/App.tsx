@@ -72,6 +72,11 @@ const App = () => (
             <Route path="/repair" element={<RepairPdf />} />
             <Route path="/unlock" element={<UnlockPdf />} />
             <Route path="/preview" element={<PdfPreview />} />
+            <Route path="/html-to-pdf" element={<HtmlToPdf />} />
+            <Route path="/url-to-pdf" element={<UrlToPdf />} />
+            <Route path="/markdown-to-pdf" element={<MarkdownToPdf />} />
+            <Route path="/csv-to-pdf" element={<CsvToPdf />} />
+            <Route path="/json-to-pdf" element={<JsonToPdf />} />
             <Route path="/about" element={<About />} />
             <Route path="/privacy" element={<About />} />
             <Route path="/terms" element={<About />} />
