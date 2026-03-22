@@ -78,6 +78,7 @@ const App = () => (
             <Route path="/markdown-to-pdf" element={<MarkdownToPdf />} />
             <Route path="/csv-to-pdf" element={<CsvToPdf />} />
             <Route path="/json-to-pdf" element={<JsonToPdf />} />
+            <Route path="/github-to-pdf" element={<GithubToPdf />} />
             <Route path="/about" element={<About />} />
             <Route path="/privacy" element={<About />} />
             <Route path="/terms" element={<About />} />

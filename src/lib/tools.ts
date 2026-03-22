@@ -72,6 +72,7 @@ export const categoryLabels: Record<ToolCategory, string> = {
   manage: "PDF Management",
   convert: "PDF Conversion",
   webdata: "Web & Data to PDF",
+  devtools: "Developer Tools",
   edit: "PDF Editing",
   security: "Security",
   extra: "Additional Tools",
