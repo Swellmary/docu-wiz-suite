@@ -44,6 +44,9 @@ export const tools: PdfTool[] = [
   { id: "csv-to-pdf", name: "CSV to PDF", description: "Convert CSV data to formatted PDF table", icon: Table2, category: "webdata", path: "/csv-to-pdf", color: "tool-webdata" },
   { id: "json-to-pdf", name: "JSON to PDF", description: "Convert JSON data to readable PDF", icon: Braces, category: "webdata", path: "/json-to-pdf", color: "tool-webdata" },
 
+  // Developer Tools
+  { id: "github-to-pdf", name: "GitHub Repo to PDF", description: "Convert GitHub repository docs to PDF", icon: Github, category: "devtools", path: "/github-to-pdf", color: "tool-devtools" },
+
   // Editing
   { id: "compress", name: "Compress PDF", description: "Reduce PDF file size", icon: Minimize2, category: "edit", path: "/compress", color: "tool-edit" },
   { id: "watermark", name: "Add Watermark", description: "Stamp text on your PDF", icon: Droplets, category: "edit", path: "/watermark", color: "tool-edit" },
