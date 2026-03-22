@@ -36,6 +36,7 @@ import UrlToPdf from "./pages/UrlToPdf";
 import MarkdownToPdf from "./pages/MarkdownToPdf";
 import CsvToPdf from "./pages/CsvToPdf";
 import JsonToPdf from "./pages/JsonToPdf";
+import GithubToPdf from "./pages/GithubToPdf";
 
 const queryClient = new QueryClient();
 
@@ -77,6 +78,7 @@ const App = () => (
             <Route path="/markdown-to-pdf" element={<MarkdownToPdf />} />
             <Route path="/csv-to-pdf" element={<CsvToPdf />} />
             <Route path="/json-to-pdf" element={<JsonToPdf />} />
+            <Route path="/github-to-pdf" element={<GithubToPdf />} />
             <Route path="/about" element={<About />} />
             <Route path="/privacy" element={<About />} />
             <Route path="/terms" element={<About />} />
