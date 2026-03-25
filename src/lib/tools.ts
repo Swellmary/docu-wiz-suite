@@ -6,7 +6,7 @@ import {
   Globe, Link, Type, Table2, Braces, Github,
 } from "lucide-react";
 
-export type ToolCategory = "organize" | "manage" | "convert" | "edit" | "security" | "webdata" | "devtools" | "extra";
+export type ToolCategory = "organize" | "manage" | "convert" | "imageconv" | "edit" | "security" | "webdata" | "devtools" | "extra";
 
 export interface PdfTool {
   id: string;
