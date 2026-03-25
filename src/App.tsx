@@ -37,6 +37,12 @@ import MarkdownToPdf from "./pages/MarkdownToPdf";
 import CsvToPdf from "./pages/CsvToPdf";
 import JsonToPdf from "./pages/JsonToPdf";
 import GithubToPdf from "./pages/GithubToPdf";
+import PngToJpg from "./pages/PngToJpg";
+import JpgToPng from "./pages/JpgToPng";
+import SvgToPng from "./pages/SvgToPng";
+import SvgToJpg from "./pages/SvgToJpg";
+import JpgToSvg from "./pages/JpgToSvg";
+import PngToSvg from "./pages/PngToSvg";
 
 const queryClient = new QueryClient();
 
@@ -79,6 +85,12 @@ const App = () => (
             <Route path="/csv-to-pdf" element={<CsvToPdf />} />
             <Route path="/json-to-pdf" element={<JsonToPdf />} />
             <Route path="/github-to-pdf" element={<GithubToPdf />} />
+            <Route path="/png-to-jpg" element={<PngToJpg />} />
+            <Route path="/jpg-to-png" element={<JpgToPng />} />
+            <Route path="/svg-to-png" element={<SvgToPng />} />
+            <Route path="/svg-to-jpg" element={<SvgToJpg />} />
+            <Route path="/jpg-to-svg" element={<JpgToSvg />} />
+            <Route path="/png-to-svg" element={<PngToSvg />} />
             <Route path="/about" element={<About />} />
             <Route path="/privacy" element={<About />} />
             <Route path="/terms" element={<About />} />

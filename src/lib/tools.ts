@@ -6,7 +6,7 @@ import {
   Globe, Link, Type, Table2, Braces, Github,
 } from "lucide-react";
 
-export type ToolCategory = "organize" | "manage" | "convert" | "edit" | "security" | "webdata" | "devtools" | "extra";
+export type ToolCategory = "organize" | "manage" | "convert" | "imageconv" | "edit" | "security" | "webdata" | "devtools" | "extra";
 
 export interface PdfTool {
   id: string;
@@ -47,6 +47,14 @@ export const tools: PdfTool[] = [
   // Developer Tools
   { id: "github-to-pdf", name: "GitHub Repo to PDF", description: "Convert GitHub repository docs to PDF", icon: Github, category: "devtools", path: "/github-to-pdf", color: "tool-devtools" },
 
+  // Image Conversion
+  { id: "png-to-jpg", name: "PNG to JPG", description: "Convert PNG images to JPG format", icon: Image, category: "imageconv", path: "/png-to-jpg", color: "tool-imageconv" },
+  { id: "jpg-to-png", name: "JPG to PNG", description: "Convert JPG images to PNG format", icon: Image, category: "imageconv", path: "/jpg-to-png", color: "tool-imageconv" },
+  { id: "svg-to-png", name: "SVG to PNG", description: "Convert SVG files to PNG images", icon: Image, category: "imageconv", path: "/svg-to-png", color: "tool-imageconv" },
+  { id: "svg-to-jpg", name: "SVG to JPG", description: "Convert SVG files to JPG images", icon: Image, category: "imageconv", path: "/svg-to-jpg", color: "tool-imageconv" },
+  { id: "jpg-to-svg", name: "JPG to SVG", description: "Convert JPG images to SVG format", icon: Image, category: "imageconv", path: "/jpg-to-svg", color: "tool-imageconv" },
+  { id: "png-to-svg", name: "PNG to SVG", description: "Convert PNG images to SVG format", icon: Image, category: "imageconv", path: "/png-to-svg", color: "tool-imageconv" },
+
   // Editing
   { id: "compress", name: "Compress PDF", description: "Reduce PDF file size", icon: Minimize2, category: "edit", path: "/compress", color: "tool-edit" },
   { id: "watermark", name: "Add Watermark", description: "Stamp text on your PDF", icon: Droplets, category: "edit", path: "/watermark", color: "tool-edit" },
@@ -71,6 +79,7 @@ export const categoryLabels: Record<ToolCategory, string> = {
   organize: "PDF Organization Tools",
   manage: "PDF Management",
   convert: "PDF Conversion",
+  imageconv: "Image Conversion",
   webdata: "Web & Data to PDF",
   devtools: "Developer Tools",
   edit: "PDF Editing",

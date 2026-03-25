@@ -9,6 +9,8 @@ const colorMap: Record<string, string> = {
   "tool-security": "bg-tool-security/10 text-tool-security",
   "tool-optimize": "bg-tool-optimize/10 text-tool-optimize",
   "tool-webdata": "bg-tool-webdata/10 text-tool-webdata",
+  "tool-imageconv": "bg-tool-imageconv/10 text-tool-imageconv",
+  "tool-devtools": "bg-tool-devtools/10 text-tool-devtools",
 };
 
 const ToolCard = ({ tool }: { tool: PdfTool }) => (

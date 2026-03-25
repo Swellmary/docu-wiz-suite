@@ -67,9 +67,10 @@ export default {
           security: "hsl(var(--tool-security))",
           optimize: "hsl(var(--tool-optimize))",
           webdata: "hsl(var(--tool-webdata))",
-          devtools: "hsl(var(--tool-devtools))",
-        },
-      },
+           devtools: "hsl(var(--tool-devtools))",
+           imageconv: "hsl(var(--tool-imageconv))",
+         },
+       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
