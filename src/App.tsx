@@ -37,6 +37,12 @@ import MarkdownToPdf from "./pages/MarkdownToPdf";
 import CsvToPdf from "./pages/CsvToPdf";
 import JsonToPdf from "./pages/JsonToPdf";
 import GithubToPdf from "./pages/GithubToPdf";
+import PngToJpg from "./pages/PngToJpg";
+import JpgToPng from "./pages/JpgToPng";
+import SvgToPng from "./pages/SvgToPng";
+import SvgToJpg from "./pages/SvgToJpg";
+import JpgToSvg from "./pages/JpgToSvg";
+import PngToSvg from "./pages/PngToSvg";
 
 const queryClient = new QueryClient();
 
