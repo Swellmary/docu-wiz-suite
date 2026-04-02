@@ -19,15 +19,25 @@ const CompressPdf = () => {
     setProcessing(true);
     try {
       const bytes = await files[0].arrayBuffer();
-      const doc = await PDFDocument.load(bytes);
-      // Basic compression: re-save which strips unused objects
-      const pdfBytes = await doc.save({ useObjectStreams: false });
+      const original = await PDFDocument.load(bytes, { ignoreEncryption: true });
+      
+      // Create a fresh document and copy pages to strip unused objects/metadata
+      const compressed = await PDFDocument.create();
+      const pages = await compressed.copyPages(original, original.getPageIndices());
+      pages.forEach((p) => compressed.addPage(p));
+
+      // Use object streams for better compression, omit metadata
+      const pdfBytes = await compressed.save({
+        useObjectStreams: true,
+        addDefaultPage: false,
+      });
+
       const originalSize = files[0].size;
       const newSize = pdfBytes.length;
       const reduction = Math.round((1 - newSize / originalSize) * 100);
 
       downloadPdf(pdfBytes, `compressed_${files[0].name}`);
-      toast.success(`Compressed! ${reduction > 0 ? `Reduced by ${reduction}%` : "File was already optimized"}`);
+      toast.success(reduction > 0 ? `Compressed! Reduced by ${reduction}% (${(originalSize/1024).toFixed(0)}KB → ${(newSize/1024).toFixed(0)}KB)` : "File was already optimized — no further compression possible");
     } catch {
       toast.error("Failed to compress PDF.");
     } finally {
