@@ -83,78 +83,106 @@ const CompressPdf = () => {
     try {
       const file = files[0];
       const bytes = await file.arrayBuffer();
+      const originalSize = file.size;
       setProgress(10);
 
+      // Strategy 1: Structural optimization (copy pages, strip metadata, object streams)
       const original = await PDFDocument.load(bytes, { ignoreEncryption: true });
-      setProgress(20);
-
-      // Step 1: Re-compress embedded images by rendering pages to canvas
+      const structuralDoc = await PDFDocument.create();
       const pageCount = original.getPageCount();
-      const compressed = await PDFDocument.create();
-
-      if (level === "maximum" || level === "high") {
-        // Aggressive: render each page to image then re-embed
-        const pdfjs = await import("pdfjs-dist");
-        pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs`;
-
-        const loadingTask = pdfjs.getDocument({ data: new Uint8Array(bytes) });
-        const pdfDoc = await loadingTask.promise;
-
-        for (let i = 0; i < pageCount; i++) {
-          const page = await pdfDoc.getPage(i + 1);
-          const viewport = page.getViewport({ scale: config.quality < 0.5 ? 1.0 : 1.5 });
-          const canvas = document.createElement("canvas");
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-          const ctx = canvas.getContext("2d")!;
-          await page.render({ canvasContext: ctx, viewport }).promise;
-
-          const blob = await new Promise<Blob>((res) =>
-            canvas.toBlob((b) => res(b!), "image/jpeg", config.quality)
-          );
-          const imgBytes = new Uint8Array(await blob.arrayBuffer());
-          const jpgImage = await compressed.embedJpg(imgBytes);
-
-          const origPage = original.getPage(i);
-          const { width, height } = origPage.getSize();
-          const newPage = compressed.addPage([width, height]);
-          newPage.drawImage(jpgImage, { x: 0, y: 0, width, height });
-
-          setProgress(20 + Math.round(((i + 1) / pageCount) * 60));
-        }
-
-        pdfDoc.destroy();
-      } else {
-        // Low/medium: copy pages and strip metadata, try to downscale images in-place
-        const pages = await compressed.copyPages(original, original.getPageIndices());
-        pages.forEach((p, i) => {
-          compressed.addPage(p);
-          setProgress(20 + Math.round(((i + 1) / pageCount) * 60));
-        });
-      }
-
-      setProgress(85);
-
+      const pages = await structuralDoc.copyPages(original, original.getPageIndices());
+      pages.forEach((p) => structuralDoc.addPage(p));
+      
       // Strip metadata
-      compressed.setTitle("");
-      compressed.setAuthor("");
-      compressed.setSubject("");
-      compressed.setKeywords([]);
-      compressed.setProducer("");
-      compressed.setCreator("");
+      structuralDoc.setTitle("");
+      structuralDoc.setAuthor("");
+      structuralDoc.setSubject("");
+      structuralDoc.setKeywords([]);
+      structuralDoc.setProducer("");
+      structuralDoc.setCreator("");
 
-      const pdfBytes = await compressed.save({
+      const structuralBytes = await structuralDoc.save({
         useObjectStreams: true,
         addDefaultPage: false,
       });
+      setProgress(40);
+
+      let bestBytes = structuralBytes;
+
+      // Strategy 2: For medium+, also try render-to-JPEG approach and pick smaller
+      if (level !== "low") {
+        try {
+          const pdfjs = await import("pdfjs-dist");
+          pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs`;
+
+          const loadingTask = pdfjs.getDocument({ data: new Uint8Array(bytes) });
+          const pdfDoc = await loadingTask.promise;
+
+          // Scale and JPEG quality vary by level
+          const renderScale = level === "maximum" ? 0.75 : level === "high" ? 1.0 : 1.2;
+          const jpegQuality = level === "maximum" ? 0.2 : level === "high" ? 0.4 : 0.6;
+
+          const compressed = await PDFDocument.create();
+
+          for (let i = 0; i < pageCount; i++) {
+            const page = await pdfDoc.getPage(i + 1);
+            const viewport = page.getViewport({ scale: renderScale });
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.round(viewport.width);
+            canvas.height = Math.round(viewport.height);
+            const ctx = canvas.getContext("2d")!;
+            await page.render({ canvasContext: ctx, viewport }).promise;
+
+            const blob = await new Promise<Blob>((res) =>
+              canvas.toBlob((b) => res(b!), "image/jpeg", jpegQuality)
+            );
+            const imgBytes = new Uint8Array(await blob.arrayBuffer());
+            const jpgImage = await compressed.embedJpg(imgBytes);
+
+            const origPage = original.getPage(i);
+            const { width, height } = origPage.getSize();
+            const newPage = compressed.addPage([width, height]);
+            newPage.drawImage(jpgImage, { x: 0, y: 0, width, height });
+
+            setProgress(40 + Math.round(((i + 1) / pageCount) * 45));
+          }
+
+          compressed.setTitle("");
+          compressed.setAuthor("");
+          compressed.setSubject("");
+          compressed.setKeywords([]);
+          compressed.setProducer("");
+          compressed.setCreator("");
+
+          const renderedBytes = await compressed.save({
+            useObjectStreams: true,
+            addDefaultPage: false,
+          });
+
+          pdfDoc.destroy();
+
+          // Only use rendered version if it's actually smaller
+          if (renderedBytes.length < bestBytes.length) {
+            bestBytes = renderedBytes;
+          }
+        } catch (renderErr) {
+          console.warn("Render compression failed, using structural:", renderErr);
+        }
+      }
+
+      setProgress(95);
+
+      // Final safety: never return a file larger than the original
+      if (bestBytes.length >= originalSize) {
+        // Just use the raw original bytes as-is
+        bestBytes = new Uint8Array(bytes);
+      }
 
       setProgress(100);
 
-      const originalSize = file.size;
-      const newSize = pdfBytes.length;
-
+      const newSize = bestBytes.length;
       setResult({
-        bytes: pdfBytes,
+        bytes: bestBytes,
         originalSize,
         newSize,
         filename: `compressed_${file.name}`,
@@ -164,7 +192,7 @@ const CompressPdf = () => {
       toast.success(
         reduction > 0
           ? `Compressed by ${reduction}% (${formatSize(originalSize)} → ${formatSize(newSize)})`
-          : "File was already optimized — no further compression possible"
+          : "File is already optimized — no further compression possible"
       );
     } catch (e) {
       console.error(e);
