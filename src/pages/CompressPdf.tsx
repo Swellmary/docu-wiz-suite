@@ -251,7 +251,7 @@ const CompressPdf = () => {
                 <p className="text-lg font-bold text-primary">{formatSize(result.newSize)}</p>
               </div>
             </div>
-            <p className="text-sm font-medium text-green-600">
+            <p className="text-sm font-medium text-primary">
               {Math.round((1 - result.newSize / result.originalSize) * 100)}% smaller
             </p>
           </div>
