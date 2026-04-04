@@ -31,7 +31,7 @@ function formatSize(bytes: number) {
 
 async function downscaleImage(imageBytes: Uint8Array, mimeType: string, quality: number): Promise<Uint8Array> {
   return new Promise((resolve) => {
-    const blob = new Blob([imageBytes], { type: mimeType });
+    const blob = new Blob([imageBytes as unknown as BlobPart], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const img = new Image();
     img.onload = () => {
